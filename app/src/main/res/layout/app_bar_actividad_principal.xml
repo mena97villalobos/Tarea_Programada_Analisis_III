@@ -46,7 +46,7 @@
         app:layout_anchorGravity="center_vertical|left" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionButton"
+        android:id="@+id/fab3"
         android:layout_width="87dp"
         android:layout_height="77dp"
         android:layout_gravity="top|right"
@@ -64,11 +64,12 @@
         android:layout_height="match_parent" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionButton2"
+        android:id="@+id/fb2"
         android:layout_width="80dp"
         android:layout_height="79dp"
         android:layout_gravity="top|center_horizontal"
         android:clickable="true"
+        android:onClick="cargarHiperPlanos"
         app:backgroundTint="@android:color/white"
         app:fabSize="mini"
         app:layout_anchor="@+id/include"

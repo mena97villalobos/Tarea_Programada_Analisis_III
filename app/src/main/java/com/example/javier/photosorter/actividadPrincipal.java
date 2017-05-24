@@ -13,6 +13,7 @@ import android.widget.EditText;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import android.Manifest;
 import android.app.Activity;
@@ -40,6 +41,7 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
+import java.util.Map;
 
 //Imports OpenCV
 import org.opencv.android.BaseLoaderCallback;
@@ -94,9 +96,24 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public double distance;
     public double min_dist = 0.775;
 
+    String hashadf = "";
+
+
+
+
+
     public void abrirActividad(View v){
         Intent i = new Intent(this,Actividad_Expandable.class);
         startActivity(i);
+    }
+
+
+    public void cargarHiperPlanos(View v){
+        /*pixelHash.setHiperplanos();
+
+        String picha = pixelHash.getHiperPlanos();
+        generateNoteOnSD(actividadPrincipal.this,"hp_cargados.txt",picha);*/
+        Toast.makeText(this, "Funciona perra", Toast.LENGTH_SHORT).show();
     }
 
     public void iniciarCamara(View v){
@@ -154,31 +171,60 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     protected void onActivityResult(int requestCode, int resultCode, Intent intent){
         super.onActivityResult(requestCode,resultCode,intent);
         if(resultCode == Activity.RESULT_OK){             //****VERSION BUENA (Pone una imagen) *****
-            Toast.makeText(actividadPrincipal.this,"Foto almacenada en el directorio 'Pictures'",Toast.LENGTH_LONG).show();
+
             Uri selectedImage = imageUri;
             getContentResolver().notifyChange(selectedImage,null);
-            ImageView imageView = (ImageView) findViewById(R.id.viewPhoto);
+
+            ImageView imageView = null;
+            imageView = (ImageView) findViewById(R.id.viewPhoto);
             ContentResolver cr = getContentResolver();
             Bitmap bitmap;
             try{
+
                 bitmap = MediaStore.Images.Media.getBitmap(cr,selectedImage);
                 imageView.setImageBitmap(bitmap);
-                //Toast.makeText(actividadPrincipal.this,selectedImage.toString(),Toast.LENGTH_LONG).show();
-                Toast.makeText(actividadPrincipal.this,"Foto almacenada en el directorio 'Pictures'",Toast.LENGTH_LONG).show();
-               // ArrayList<Integer> cac = pixelHash.vectorImagen(bitmap);
-                 bitmap = pixelHash.resizeImage(bitmap);
-                 bitmap = pixelHash.toGrayscale(bitmap);
-                String pene = "width: "+bitmap.getWidth()+" height: " + bitmap.getHeight();
-                /*for (Integer integer : cac) {
-                    pene += integer+"*";
-                    Log.d(TAG, pene);
-                }*/
+
+                bitmap = pixelHash.resizeImage(bitmap);
+                bitmap = pixelHash.toGrayscale(bitmap);
+
+
+                String pene ="";
+
+                int[] pixeles = new int[bitmap.getHeight()*bitmap.getWidth()];
+
+                bitmap.getPixels(pixeles,0,bitmap.getWidth(),0,0,bitmap.getWidth(),bitmap.getHeight());
+
+                pene = "Total de pixeles: "+pixeles.length+"\n";
+
+                String hashImagen = pixelHash.hashImagen(pixeles);
+
+                boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
+                if(!yaExisteArchivoHash){
+                    Toast.makeText(actividadPrincipal.this,"Picha mame", Toast.LENGTH_LONG).show();
+                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt","");
+                }
+
+
+                String nombreImagen = new File(selectedImage.getPath()).getName();
+                pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
+
+
+
+                pene += "Imagen tomada y su hash: "+ hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "pene.txt",pene);
+
+
+
+                String hp = pixelHash.getHiperPlanos();
+                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt",hp);
+
             }
             catch (Exception e){
                 Log.e(logtag,e.toString());
 
             }
+
+
         }   //   **** Ejemplo de cargar imagen en ImageView *****  */
 
     }
@@ -194,7 +240,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             writer.append(sBody);
             writer.flush();
             writer.close();
-            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             Toast.makeText(actividadPrincipal.this,"Archivo no guardado",Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -232,6 +278,16 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public boolean archivoYaExiste(String fileName){
+
+        File root = new File(Environment.getExternalStorageDirectory(),"Notes");
+        File archivo = new File(root, fileName);
+        if(!archivo.exists())
+            return false;
+        return true;
+
     }
 
     void compare() {

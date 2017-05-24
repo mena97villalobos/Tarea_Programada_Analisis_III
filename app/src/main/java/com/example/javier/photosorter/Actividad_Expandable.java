@@ -1,21 +1,40 @@
 package com.example.javier.photosorter;
 
+import android.content.Intent;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Actividad_Expandable extends AppCompatActivity {
+
 
     private LinkedHashMap<String, GroupInfo> subjects = new LinkedHashMap<String, GroupInfo>();
     private ArrayList<GroupInfo> deptList = new ArrayList<GroupInfo>();
 
     private CustomAdapter listAdapter;
     private ExpandableListView simpleExpandableListView;
+    private Map<String,ArrayList<String>> mapaPixeles = new HashMap();
+
+
+    public void cargarImagen(View v){
+        Intent i = new Intent(this,ViewImage.class);
+        startActivity(i);
+    }
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -25,7 +44,8 @@ public class Actividad_Expandable extends AppCompatActivity {
         //simpleExpandableListView.addChildrenForAccessibility(new ArrayList<View>(1));
 
         // add data for displaying in expandable list view
-        loadData();
+        //loadData();
+        cargarHashes();
 
         //get reference of the ExpandableListView
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.simpleExpandableListView);
@@ -48,6 +68,15 @@ public class Actividad_Expandable extends AppCompatActivity {
                 //display it or do something with it
                 Toast.makeText(getBaseContext(), " Clicked on :: " + headerInfo.getName()
                         + "/" + detailInfo.getName(), Toast.LENGTH_LONG).show();
+
+
+                Intent i = new Intent(Actividad_Expandable.this,ViewImage.class);
+                Bundle b = new Bundle();
+                b.putString("img",detailInfo.getName());
+                i.putExtras(b);
+                startActivity(i);
+                finish();
+
                 return false;
             }
         });
@@ -130,6 +159,60 @@ public class Actividad_Expandable extends AppCompatActivity {
         //find the group position inside the list
         groupPosition = deptList.indexOf(headerInfo);
         return groupPosition;
+    }
+
+    public void cargarHashes(){
+
+        try{
+
+            File root = new File(Environment.getExternalStorageDirectory(),"Notes");
+            File archivo = new File(root, "hashes.txt");
+
+
+            InputStream instream = new FileInputStream(archivo);
+
+            if (instream != null) {
+                // prepare the file for reading
+                InputStreamReader inputreader = new InputStreamReader(instream);
+                BufferedReader buffreader = new BufferedReader(inputreader);
+
+                String line = buffreader.readLine();
+
+                ArrayList valoresEnteros;
+                while(line != null){
+
+                    ArrayList<String> temp;
+
+                    if(mapaPixeles.get(line.split(",")[0]) != null)
+                        temp = mapaPixeles.get(line.split(",")[0]);
+                    else
+                        temp = new ArrayList();
+
+                    temp.add(line.split(",")[1]);
+                    mapaPixeles.put(line.split(",")[0],temp);
+
+
+                    //addProduct(,"imagenxDxdXDxd"); // en lugar de imagen xdxdx hay que agregar el nombre de la imagen
+                    line = buffreader.readLine();
+                }
+
+
+                for(String key: mapaPixeles.keySet()){
+                    for(String valor: mapaPixeles.get(key)){
+                        addProduct(key,valor);
+                    }
+                }
+            }
+
+
+
+        } catch (Exception ex) {
+            // print stack trace.
+
+        } finally {
+            // close the file.
+
+        }
     }
 
 
