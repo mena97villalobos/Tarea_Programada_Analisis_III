@@ -2,18 +2,22 @@ package com.example.javier.photosorter;
 
 //Imports sin usar
 import android.app.Fragment;
-import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.support.design.widget.Snackbar;
 import android.provider.Settings;
 import android.support.v4.app.FragmentManager;
 import android.widget.Button;
 import android.widget.EditText;
+import java.util.Map;
+import java.util.Arrays;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.BitmapFactory;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import android.Manifest;
 import android.app.Activity;
@@ -41,7 +45,6 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
-import java.util.Map;
 
 //Imports OpenCV
 import org.opencv.android.BaseLoaderCallback;
@@ -83,6 +86,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     private static final int TAKE_PICTURE = 0;
     private File imageFile;
     public PixelHash pixelHash = new PixelHash();
+    public int RESULT_LOAD_IMG = 1;
 
     //Variables OpenCV
     private static Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
@@ -96,24 +100,16 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public double distance;
     public double min_dist = 0.775;
 
-    String hashadf = "";
-
-
-
-
-
     public void abrirActividad(View v){
         Intent i = new Intent(this,Actividad_Expandable.class);
         startActivity(i);
     }
 
-
     public void cargarHiperPlanos(View v){
         /*pixelHash.setHiperplanos();
-
         String picha = pixelHash.getHiperPlanos();
         generateNoteOnSD(actividadPrincipal.this,"hp_cargados.txt",picha);*/
-        Toast.makeText(this, "Funciona perra", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Cargar LBP", Toast.LENGTH_SHORT).show();
     }
 
     public void iniciarCamara(View v){
@@ -123,7 +119,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         imageUri = Uri.fromFile(photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);
         startActivityForResult(intent,TAKE_PICTURE);
-       //startActivity(intent);
     }
 
     @Override
@@ -141,7 +136,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         setContentView(R.layout.activity_actividad_principal);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        FloatingActionButton camara = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton camara = (FloatingActionButton) findViewById(R.id.camara);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -170,63 +165,72 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent){
         super.onActivityResult(requestCode,resultCode,intent);
-        if(resultCode == Activity.RESULT_OK){             //****VERSION BUENA (Pone una imagen) *****
+        if (requestCode == RESULT_LOAD_IMG && resultCode == RESULT_OK) {
+            try {
+                ImageView image_view = (ImageView) findViewById(R.id.viewPhoto);
+                Uri imageUri = intent.getData();
+                InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                image_view.setImageBitmap(selectedImage);
+                //TODO De aqui pa'lla se puede cagar PD le quite el final a las variables de arriba
+                selectedImage = pixelHash.resizeImage(selectedImage);
+                selectedImage = pixelHash.toGrayscale(selectedImage);
+                String pathCargado = getRealPathFromURI(imageUri);
+                String informacion ="";
+                int[] pixeles = new int[selectedImage.getHeight()*selectedImage.getWidth()];
+                selectedImage.getPixels(pixeles,0,selectedImage.getWidth(),0,0,selectedImage.getWidth(),selectedImage.getHeight());
+                informacion = "Total de pixeles: "+pixeles.length+"\n";
+                String hashImagen = pixelHash.hashImagen(pixeles);
+                boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
+                if(!yaExisteArchivoHash){
+                    Toast.makeText(actividadPrincipal.this,"Creando Archivo Hashes", Toast.LENGTH_LONG).show();
+                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt","");
+                }
+                String nombreImagen = new File(pathCargado).getName();
+                pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
+                informacion += "Imagen tomada y su hash: "+ hashImagen;
+                generateNoteOnSD(actividadPrincipal.this, "pene.txt", informacion);
+                String hp = pixelHash.getHiperPlanos();
+                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
 
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(actividadPrincipal.this, "Error", Toast.LENGTH_LONG).show();
+            }
+        }
+        else if(requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK){
             Uri selectedImage = imageUri;
             getContentResolver().notifyChange(selectedImage,null);
-
             ImageView imageView = null;
             imageView = (ImageView) findViewById(R.id.viewPhoto);
             ContentResolver cr = getContentResolver();
             Bitmap bitmap;
             try{
-
                 bitmap = MediaStore.Images.Media.getBitmap(cr,selectedImage);
                 imageView.setImageBitmap(bitmap);
-
                 bitmap = pixelHash.resizeImage(bitmap);
                 bitmap = pixelHash.toGrayscale(bitmap);
-
-
-                String pene ="";
-
+                String info ="";
                 int[] pixeles = new int[bitmap.getHeight()*bitmap.getWidth()];
-
                 bitmap.getPixels(pixeles,0,bitmap.getWidth(),0,0,bitmap.getWidth(),bitmap.getHeight());
-
-                pene = "Total de pixeles: "+pixeles.length+"\n";
-
+                info = "Total de pixeles: "+pixeles.length+"\n";
                 String hashImagen = pixelHash.hashImagen(pixeles);
-
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
                 if(!yaExisteArchivoHash){
-                    Toast.makeText(actividadPrincipal.this,"Picha mame", Toast.LENGTH_LONG).show();
+                    Toast.makeText(actividadPrincipal.this,"Creando Archivo Hashes", Toast.LENGTH_LONG).show();
                     generateNoteOnSD(actividadPrincipal.this, "hashes.txt","");
                 }
-
-
                 String nombreImagen = new File(selectedImage.getPath()).getName();
                 pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
-
-
-
-                pene += "Imagen tomada y su hash: "+ hashImagen;
-                generateNoteOnSD(actividadPrincipal.this, "pene.txt",pene);
-
-
-
+                info += "Imagen tomada y su hash: "+ hashImagen;
+                generateNoteOnSD(actividadPrincipal.this, "pene.txt", info);
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt",hp);
-
             }
             catch (Exception e){
                 Log.e(logtag,e.toString());
-
             }
-
-
-        }   //   **** Ejemplo de cargar imagen en ImageView *****  */
-
+        }
     }
 
     public void generateNoteOnSD(Context context, String sFileName, String sBody) {
@@ -240,7 +244,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             writer.append(sBody);
             writer.flush();
             writer.close();
-            //Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+            Toast.makeText(actividadPrincipal.this,"Archivo guardado",Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             Toast.makeText(actividadPrincipal.this,"Archivo no guardado",Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -249,7 +253,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.actividad_principal, menu);
         return true;
     }
@@ -264,7 +267,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -274,20 +276,17 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         android.app.FragmentManager fragmentManager = getFragmentManager();
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
     public boolean archivoYaExiste(String fileName){
-
         File root = new File(Environment.getExternalStorageDirectory(),"Notes");
         File archivo = new File(root, fileName);
         if(!archivo.exists())
             return false;
         return true;
-
     }
 
     void compare() {
@@ -338,5 +337,21 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             e.printStackTrace();
         }
 
+    }
+
+    // Carga de Imagen desde la galeria
+    public void onButtonCargarImagenClick(View view) {
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        startActivityForResult(photoPickerIntent, RESULT_LOAD_IMG);
+    }
+
+    public String getRealPathFromURI(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        @SuppressWarnings("deprecation")
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
     }
 }

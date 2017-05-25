@@ -13,10 +13,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-
-/**
- * Created by Gourav on 08-03-2016.
- */
 public class CustomAdapter extends BaseExpandableListAdapter {
 
     private Context context;
@@ -39,29 +35,23 @@ public class CustomAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
-                             View view, ViewGroup parent) {
-
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View view, ViewGroup parent) {
         ChildInfo detailInfo = (ChildInfo) getChild(groupPosition, childPosition);
         if (view == null) {
             LayoutInflater infalInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = infalInflater.inflate(R.layout.child_items, null);
         }
-
         TextView sequence = (TextView) view.findViewById(R.id.sequence);
         sequence.setText(detailInfo.getSequence().trim() + ". ");
         TextView childItem = (TextView) view.findViewById(R.id.childItem);
         childItem.setText(detailInfo.getName().trim());
-
         return view;
     }
 
     @Override
     public int getChildrenCount(int groupPosition) {
-
         ArrayList<ChildInfo> productList = deptList.get(groupPosition).getProductList();
         return productList.size();
-
     }
 
     @Override
@@ -80,18 +70,14 @@ public class CustomAdapter extends BaseExpandableListAdapter {
     }
 
     @Override
-    public View getGroupView(int groupPosition, boolean isLastChild, View view,
-                             ViewGroup parent) {
-
+    public View getGroupView(int groupPosition, boolean isLastChild, View view, ViewGroup parent) {
         GroupInfo headerInfo = (GroupInfo) getGroup(groupPosition);
         if (view == null) {
             LayoutInflater inf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = inf.inflate(R.layout.group_items, null);
         }
-
         TextView heading = (TextView) view.findViewById(R.id.heading);
         heading.setText(headerInfo.getName().trim());
-
         return view;
     }
 
