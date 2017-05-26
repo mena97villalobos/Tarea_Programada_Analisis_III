@@ -1,16 +1,24 @@
 package com.example.javier.photosorter;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -27,6 +35,7 @@ public class Actividad_Expandable extends AppCompatActivity {
     private CustomAdapter listAdapter;
     private ExpandableListView simpleExpandableListView;
     private Map<String,ArrayList<String>> mapaPixeles = new HashMap();
+    private Map<String,String> mapaTags = new HashMap();
 
 
     public void cargarImagen(View v){
@@ -80,6 +89,7 @@ public class Actividad_Expandable extends AppCompatActivity {
                 return false;
             }
         });
+
         // setOnGroupClickListener listener for group heading click
         simpleExpandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
@@ -87,12 +97,81 @@ public class Actividad_Expandable extends AppCompatActivity {
                 //get the group header
                 GroupInfo headerInfo = deptList.get(groupPosition);
                 //display it or do something with it
-                Toast.makeText(getBaseContext(), " Header is :: " + headerInfo.getName(),
-                        Toast.LENGTH_LONG).show();
+                //Toast.makeText(getBaseContext(), " Header is :: " + headerInfo.getName(),
+                  //      Toast.LENGTH_LONG).show();
+
+                return false;
+            }
+
+        });
+
+
+        //este es el mejor candidato para mi
+        simpleExpandableListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                //Toast.makeText(getBaseContext(), "Item Pos: "+simpleExpandableListView., Toast.LENGTH_SHORT).show();
+
+                if(position>=0 && position<deptList.size()) {
+                    final GroupInfo headerInfo = deptList.get(position);
+
+                    //Toast.makeText(getBaseContext(), "Nombre:" + headerInfo.getName(), Toast.LENGTH_LONG).show();
+
+                    // get prompts.xml view
+                    LayoutInflater li = LayoutInflater.from(Actividad_Expandable.this);
+                    View promptsView = li.inflate(R.layout.prompt, null);
+
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(Actividad_Expandable.this);
+
+                    // set prompts.xml to alertdialog builder
+                    alertDialogBuilder.setView(promptsView);
+
+                    final EditText userInput = (EditText) promptsView
+                            .findViewById(R.id.editTextDialogUserInput);
+
+                    TextView nombreDelBucket = (TextView) promptsView.findViewById(R.id.textView2);
+                    nombreDelBucket.setText("Nombre a cambiar: " + headerInfo.getName());
+
+
+                    // set dialog message
+                    alertDialogBuilder
+                            .setCancelable(false)
+                            .setPositiveButton("OK",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            // get user input and set it to result
+                                            // edit text
+                                            // EditText cuadroEditar = (EditText)findViewById(R.id.editTextDialogUserInput);
+                                            //cuadroEditar.setText(userInput.getText());
+                                            escribirNuevoTag(headerInfo.getName(),userInput.getText().toString());
+                                            headerInfo.setName(userInput.getText().toString());
+                                        }
+                                    })
+                            .setNegativeButton("Cancel",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+
+                    // create alert dialog
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+
+                    // show it
+                    alertDialog.show();
+
+
+                }else{
+                    Toast.makeText(getBaseContext(),"Cierre los Buckets MIERDA",Toast.LENGTH_LONG).show();
+
+                }
+
 
                 return false;
             }
         });
+
 
 
     }
@@ -196,10 +275,14 @@ public class Actividad_Expandable extends AppCompatActivity {
                     line = buffreader.readLine();
                 }
 
+                cargarTags(); //MUY IMPORTANTE PARA SABER CUALES TAGS EXISTEN
 
                 for(String key: mapaPixeles.keySet()){
                     for(String valor: mapaPixeles.get(key)){
-                        addProduct(key,valor);
+                        if(mapaTags.get(key) == null)
+                            addProduct(key,valor);
+                        else
+                            addProduct(mapaTags.get(key),valor);
                     }
                 }
             }
@@ -209,11 +292,55 @@ public class Actividad_Expandable extends AppCompatActivity {
         } catch (Exception ex) {
             // print stack trace.
 
+        }
+    }
+
+    public void cargarTags(){
+        try{
+
+            File root = new File(Environment.getExternalStorageDirectory(),"Notes");
+            File archivo = new File(root, "tags_hashes.txt");
+
+            InputStream instream = new FileInputStream(archivo);
+
+            if (instream != null) {
+                // prepare the file for reading
+                InputStreamReader inputreader = new InputStreamReader(instream);
+                BufferedReader buffreader = new BufferedReader(inputreader);
+
+                String line = buffreader.readLine();
+
+                while(line != null){
+
+                    mapaTags.put(line.split(",")[0],line.split(",")[1]);
+                    line = buffreader.readLine();
+                }
+            }
+        } catch (Exception ex) {
+            // print stack trace.
+
         } finally {
             // close the file.
 
         }
     }
+
+    public void escribirNuevoTag(String hash, String tag){
+        try {
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, "tags_hashes.txt");
+            FileWriter writer = new FileWriter(gpxfile,true);
+            writer.append(hash+","+tag+"\n");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }

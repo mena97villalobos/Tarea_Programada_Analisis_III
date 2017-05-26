@@ -170,7 +170,6 @@ public class PixelHash {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public  ArrayList<Integer> convertirAEnteros(String [] enteros){
