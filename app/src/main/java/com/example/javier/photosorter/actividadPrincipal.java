@@ -7,6 +7,10 @@ import android.provider.Settings;
 import android.support.v4.app.FragmentManager;
 import android.widget.Button;
 import android.widget.EditText;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.util.Map;
 import java.util.Arrays;
 
@@ -173,9 +177,15 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 image_view.setImageBitmap(selectedImage);
                 //TODO De aqui pa'lla se puede cagar PD le quite el final a las variables de arriba
+                String pathCargado = getRealPathFromURI(imageUri);
+
+                //Copiar la imagen al directorio Pictures
+                String pathDest = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                copyFileOrDirectory(pathCargado, pathDest);
+                //
+
                 selectedImage = pixelHash.resizeImage(selectedImage);
                 selectedImage = pixelHash.toGrayscale(selectedImage);
-                String pathCargado = getRealPathFromURI(imageUri);
                 String informacion ="";
                 int[] pixeles = new int[selectedImage.getHeight()*selectedImage.getWidth()];
                 selectedImage.getPixels(pixeles,0,selectedImage.getWidth(),0,0,selectedImage.getWidth(),selectedImage.getHeight());
@@ -189,13 +199,16 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String nombreImagen = new File(pathCargado).getName();
                 pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
                 informacion += "Imagen tomada y su hash: "+ hashImagen;
-                generateNoteOnSD(actividadPrincipal.this, "pene.txt", informacion);
+                generateNoteOnSD(actividadPrincipal.this, "info.txt", informacion);
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(actividadPrincipal.this, "Error", Toast.LENGTH_LONG).show();
+            } catch (IOException e){
+                e.printStackTrace();
+                Toast.makeText(actividadPrincipal.this, "Error Moviendo Foto", Toast.LENGTH_LONG).show();
             }
         }
         else if(requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK){
@@ -223,7 +236,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String nombreImagen = new File(selectedImage.getPath()).getName();
                 pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
                 info += "Imagen tomada y su hash: "+ hashImagen;
-                generateNoteOnSD(actividadPrincipal.this, "pene.txt", info);
+                generateNoteOnSD(actividadPrincipal.this, "info.txt", info);
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt",hp);
             }
@@ -353,5 +366,50 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         cursor.moveToFirst();
         return cursor.getString(column_index);
+    }
+
+    public static void copyFileOrDirectory(String srcDir, String dstDir) {
+        try {
+            File src = new File(srcDir);
+            File dst = new File(dstDir, src.getName());
+            if (src.isDirectory()) {
+                String files[] = src.list();
+                int filesLength = files.length;
+                for (int i = 0; i < filesLength; i++) {
+                    String src1 = (new File(src, files[i]).getPath());
+                    String dst1 = dst.getPath();
+                    copyFileOrDirectory(src1, dst1);
+                }
+            } else {
+                copyFile(src, dst);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void copyFile(File sourceFile, File destFile) throws IOException {
+        if (!destFile.getParentFile().exists())
+            destFile.getParentFile().mkdirs();
+
+        if (!destFile.exists()) {
+            destFile.createNewFile();
+        }
+
+        FileChannel source = null;
+        FileChannel destination = null;
+
+        try {
+            source = new FileInputStream(sourceFile).getChannel();
+            destination = new FileOutputStream(destFile).getChannel();
+            destination.transferFrom(source, 0, source.size());
+        } finally {
+            if (source != null) {
+                source.close();
+            }
+            if (destination != null) {
+                destination.close();
+            }
+        }
     }
 }
