@@ -91,6 +91,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     private static final int TAKE_PICTURE = 0;
     private File imageFile;
     public PixelHash pixelHash = new PixelHash();
+    public LBPHash lbpHash = new LBPHash();
     public int RESULT_LOAD_IMG = 1;
 
     //Variables OpenCV
@@ -111,10 +112,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     }
 
     public void cargarHiperPlanos(View v) {
-        /*pixelHash.setHiperplanos();
-        String picha = pixelHash.getHiperPlanos();
-        generateNoteOnSD(actividadPrincipal.this,"hp_cargados.txt",picha);*/
-        Toast.makeText(this, "Cargar LBP", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Cargar LBP", Toast.LENGTH_SHORT).show();
     }
 
     public void iniciarCamara(View v) {
@@ -195,7 +193,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String hashImagen = pixelHash.hashImagen(pixeles);
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
                 if (!yaExisteArchivoHash) {
-                    Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
                     generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
                 String nombreImagen = new File(pathCargado).getName();
@@ -206,7 +204,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
 
                 //Logica para LBP
-                compare(selectedImage, selectedImage);
+
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -231,7 +229,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String hashImagen = pixelHash.hashImagen(pixeles);
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
                 if (!yaExisteArchivoHash) {
-                    Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
                     generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
                 String nombreImagen = new File(selectedImage.getPath()).getName();
@@ -241,7 +239,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
                 //Logica para LBP
-                compare(bitmap, bitmap);
 
             } catch (Exception e) {
                 Log.e(logtag, e.toString());
@@ -260,7 +257,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             writer.append(sBody);
             writer.flush();
             writer.close();
-            Toast.makeText(actividadPrincipal.this, "Archivo guardado", Toast.LENGTH_LONG).show();
+            //Toast.makeText(actividadPrincipal.this, "Archivo guardado", Toast.LENGTH_LONG).show();
         } catch (IOException e) {
             Toast.makeText(actividadPrincipal.this, "Archivo no guardado", Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -303,53 +300,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         if (!archivo.exists())
             return false;
         return true;
-    }
-
-    public boolean compare(Bitmap bmpimg1, Bitmap bmpimg2) {
-        bmpimg1 = Bitmap.createScaledBitmap(bmpimg1, 100, 100, true);
-        bmpimg2 = Bitmap.createScaledBitmap(bmpimg2, 100, 100, true);
-        Mat img1 = new Mat();
-        Utils.bitmapToMat(bmpimg1, img1);
-        Mat img2 = new Mat();
-        Utils.bitmapToMat(bmpimg2, img2);
-        Imgproc.cvtColor(img1, img1, Imgproc.COLOR_RGBA2GRAY);
-        Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGBA2GRAY);
-        img1.convertTo(img1, CvType.CV_32F);
-        img2.convertTo(img2, CvType.CV_32F);
-        //Log.d("ImageComparator", "img1:"+img1.rows()+"x"+img1.cols()+" img2:"+img2.rows()+"x"+img2.cols());
-        Mat hist1 = new Mat();
-        Mat hist2 = new Mat();
-        MatOfInt histSize = new MatOfInt(180);
-        MatOfInt channels = new MatOfInt(0);
-        ArrayList<Mat> bgr_planes1 = new ArrayList<Mat>();
-        ArrayList<Mat> bgr_planes2 = new ArrayList<Mat>();
-        Core.split(img1, bgr_planes1);
-        Core.split(img2, bgr_planes2);
-        MatOfFloat histRanges = new MatOfFloat(0f, 180f);
-        boolean accumulate = false;
-        Imgproc.calcHist(bgr_planes1, channels, new Mat(), hist1, histSize, histRanges, accumulate);
-        Core.normalize(hist1, hist1, 0, hist1.rows(), Core.NORM_MINMAX, -1, new Mat());
-        Imgproc.calcHist(bgr_planes2, channels, new Mat(), hist2, histSize, histRanges, accumulate);
-        Core.normalize(hist2, hist2, 0, hist2.rows(), Core.NORM_MINMAX, -1, new Mat());
-        img1.convertTo(img1, CvType.CV_32F);
-        img2.convertTo(img2, CvType.CV_32F);
-        hist1.convertTo(hist1, CvType.CV_32F);
-        hist2.convertTo(hist2, CvType.CV_32F);
-        double compare = Imgproc.compareHist(hist1, hist2, Imgproc.CV_COMP_CHISQR);
-        Log.d("ImageComparator", "compare: " + compare);
-        String x = "";
-        if (compare >= 0 && compare < 1500) {
-            Toast.makeText(actividadPrincipal.this, "Images may be possible duplicates", Toast.LENGTH_LONG).show();
-            x+="Images may be possible duplicates";
-            generateNoteOnSD(actividadPrincipal.this, "LBPPruebas.txt", x);
-            return true;
-        }
-        else {
-            Toast.makeText(actividadPrincipal.this, "Images are not duplicates", Toast.LENGTH_LONG).show();
-            x+="Images are not duplicates";
-            generateNoteOnSD(actividadPrincipal.this, "LBPPruebas.txt", x);
-            return false;
-        }
     }
 
     // Carga de Imagen desde la galeria

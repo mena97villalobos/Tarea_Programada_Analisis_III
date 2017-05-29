@@ -44,7 +44,6 @@ public class Actividad_Expandable extends AppCompatActivity {
     }
 
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,10 +74,7 @@ public class Actividad_Expandable extends AppCompatActivity {
                 //get the child info
                 ChildInfo detailInfo =  headerInfo.getProductList().get(childPosition);
                 //display it or do something with it
-                Toast.makeText(getBaseContext(), " Clicked on :: " + headerInfo.getName()
-                        + "/" + detailInfo.getName(), Toast.LENGTH_LONG).show();
-
-
+                //Toast.makeText(getBaseContext(), " Clicked on :: " + headerInfo.getName() + "/" + detailInfo.getName(), Toast.LENGTH_LONG).show();
                 Intent i = new Intent(Actividad_Expandable.this,ViewImage.class);
                 Bundle b = new Bundle();
                 b.putString("img",detailInfo.getName());
@@ -163,7 +159,7 @@ public class Actividad_Expandable extends AppCompatActivity {
 
 
                 }else{
-                    Toast.makeText(getBaseContext(),"Cierre los Buckets MIERDA",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getBaseContext(), "Cierre los Buckets", Toast.LENGTH_LONG).show();
 
                 }
 
