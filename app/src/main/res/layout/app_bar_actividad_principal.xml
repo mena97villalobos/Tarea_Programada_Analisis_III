@@ -53,19 +53,6 @@
         app:srcCompat="@drawable/ic_menu_camera" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/botonLBP"
-        android:layout_width="80dp"
-        android:layout_height="79dp"
-        android:layout_gravity="top|right"
-        android:clickable="true"
-        android:onClick="cargarHiperPlanos"
-        app:backgroundTint="@android:color/white"
-        app:fabSize="mini"
-        app:layout_anchor="@+id/include"
-        app:layout_anchorGravity="bottom|center_horizontal"
-        app:srcCompat="?android:attr/actionModeSelectAllDrawable" />
-
-    <android.support.design.widget.FloatingActionButton
         android:id="@+id/botonPixeles"
         android:layout_width="78dp"
         android:layout_height="78dp"
@@ -86,6 +73,19 @@
         android:layout_marginTop="65dp"
         android:adjustViewBounds="false"
         android:cropToPadding="false" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/botonLBP"
+        android:layout_width="80dp"
+        android:layout_height="79dp"
+        android:layout_gravity="top|right"
+        android:clickable="true"
+        android:onClick="cargarHiperPlanos"
+        app:backgroundTint="@android:color/white"
+        app:fabSize="mini"
+        app:layout_anchor="@+id/include"
+        app:layout_anchorGravity="bottom|center_horizontal"
+        app:srcCompat="?android:attr/actionModeSelectAllDrawable" />
 
 
 </android.support.design.widget.CoordinatorLayout>

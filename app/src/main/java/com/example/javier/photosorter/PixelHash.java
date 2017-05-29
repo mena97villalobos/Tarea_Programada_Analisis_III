@@ -33,16 +33,20 @@ import java.util.Random;
 
 public class PixelHash {
     public ArrayList<ArrayList<Integer>> hiperplanos = null;
-
+    public String loadResult;
 
     public PixelHash(){
         boolean yaExisteArchivo = archivoYaExiste("hiperplanos.txt");
         if (!yaExisteArchivo) {
             hiperplanos = generarHiperplanos();
-        }
-        else
+            Log.i("Cargar hiperplanos", "No sirve");
+            loadResult = "Generar Hiperplanos";
+        } else {
             setHiperplanos();
+            loadResult = "Cargar Hiperplanos";
+        }
     }
+
 
     public boolean archivoYaExiste(String fileName) {
         File root = new File(Environment.getExternalStorageDirectory(), "Notes");
@@ -143,6 +147,7 @@ public class PixelHash {
                 String[] valores;
                 ArrayList<Integer> valoresEnteros = null;
                 while(line != null){
+                    line = line.replace("[", "").replace("]", "");
                     valores = line.split(":");
                     valoresEnteros = convertirAEnteros(valores);
                     enteros.add(valoresEnteros);

@@ -149,6 +149,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         camara.setOnClickListener(camaraListener);
+        generateNoteOnSD(actividadPrincipal.this, "Debug.txt", pixelHash.loadResult);
     }
 
     public View.OnClickListener camaraListener = new View.OnClickListener() {
