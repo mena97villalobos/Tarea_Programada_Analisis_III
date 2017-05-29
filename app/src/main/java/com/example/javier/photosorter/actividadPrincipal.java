@@ -5,15 +5,13 @@ import android.app.Fragment;
 import android.support.design.widget.Snackbar;
 import android.provider.Settings;
 import android.support.v4.app.FragmentManager;
-import android.widget.Button;
 import android.widget.EditText;
-
+import java.util.Map;
+import java.util.Arrays;
+import android.widget.Button;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
-import java.util.Map;
-import java.util.Arrays;
-
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
@@ -49,19 +47,19 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
 import java.io.File;
+import android.widget.TextView;
 
 //Imports OpenCV
+import org.opencv.core.Scalar;
+import org.opencv.features2d.Features2d;
+import org.opencv.engine.OpenCVEngineInterface;
+import org.opencv.core.MatOfByte;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
-import org.opencv.core.Scalar;
-import org.opencv.features2d.Features2d;
-import org.opencv.engine.OpenCVEngineInterface;
-
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -75,15 +73,18 @@ import org.opencv.imgproc.Imgproc;
 
 public class actividadPrincipal extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = "MainActivity";
-    static{
+
+    static {
         System.loadLibrary("opencv_java3");
     }
-    static{
-        if(!OpenCVLoader.initDebug())
+
+    static {
+        if (!OpenCVLoader.initDebug())
             Log.d(TAG, "OpenCV not Loaded");
         else
             Log.d(TAG, "OpenCV Loaded");
     }
+
     public static final String UNABLE_TO_SAVE_PHOTO_FILE = "Unable to save photo file";
     private static String logtag = "CameraApp8";
     private Uri imageUri;
@@ -93,8 +94,8 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public int RESULT_LOAD_IMG = 1;
 
     //Variables OpenCV
-    private static Bitmap bmp, yourSelectedImage, bmpimg1, bmpimg2;
-    private static Mat img1, img2, descriptors, dupDescriptors;
+    private static Bitmap bmp, yourSelectedImage;//, bmpimg1, bmpimg2;
+    private static Mat descriptors, dupDescriptor;//, img1, img2,;
     private static FeatureDetector detector;
     private static DescriptorExtractor DescExtractor;
     private static DescriptorMatcher matcher;
@@ -104,38 +105,38 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public double distance;
     public double min_dist = 0.775;
 
-    public void abrirActividad(View v){
-        Intent i = new Intent(this,Actividad_Expandable.class);
+    public void abrirActividad(View v) {
+        Intent i = new Intent(this, Actividad_Expandable.class);
         startActivity(i);
     }
 
-    public void cargarHiperPlanos(View v){
+    public void cargarHiperPlanos(View v) {
         /*pixelHash.setHiperplanos();
         String picha = pixelHash.getHiperPlanos();
         generateNoteOnSD(actividadPrincipal.this,"hp_cargados.txt",picha);*/
         Toast.makeText(this, "Cargar LBP", Toast.LENGTH_SHORT).show();
     }
 
-    public void iniciarCamara(View v){
+    public void iniciarCamara(View v) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);//"android.media.action.ACTION_IMAGE_CAPTURE");
-        File photo =  new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),("IMG_"+ System.currentTimeMillis()+"_photo.jpg"));
-        imageFile = new File(photo,"passpoints_image");
+        File photo = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), ("IMG_" + System.currentTimeMillis() + "_photo.jpg"));
+        imageFile = new File(photo, "passpoints_image");
         imageUri = Uri.fromFile(photo);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);
-        startActivityForResult(intent,TAKE_PICTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        startActivityForResult(intent, TAKE_PICTURE);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 100);
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
         }
         setContentView(R.layout.activity_actividad_principal);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -150,8 +151,8 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         camara.setOnClickListener(camaraListener);
     }
 
-    public View.OnClickListener camaraListener = new View.OnClickListener(){
-        public void onClick(View v){
+    public View.OnClickListener camaraListener = new View.OnClickListener() {
+        public void onClick(View v) {
             iniciarCamara(v);
         }
     };
@@ -167,8 +168,8 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent){
-        super.onActivityResult(requestCode,resultCode,intent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
         if (requestCode == RESULT_LOAD_IMG && resultCode == RESULT_OK) {
             try {
                 ImageView image_view = (ImageView) findViewById(R.id.viewPhoto);
@@ -186,62 +187,64 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
 
                 selectedImage = pixelHash.resizeImage(selectedImage);
                 selectedImage = pixelHash.toGrayscale(selectedImage);
-                String informacion ="";
-                int[] pixeles = new int[selectedImage.getHeight()*selectedImage.getWidth()];
-                selectedImage.getPixels(pixeles,0,selectedImage.getWidth(),0,0,selectedImage.getWidth(),selectedImage.getHeight());
-                informacion = "Total de pixeles: "+pixeles.length+"\n";
+                String informacion = "";
+                int[] pixeles = new int[selectedImage.getHeight() * selectedImage.getWidth()];
+                selectedImage.getPixels(pixeles, 0, selectedImage.getWidth(), 0, 0, selectedImage.getWidth(), selectedImage.getHeight());
+                informacion = "Total de pixeles: " + pixeles.length + "\n";
                 String hashImagen = pixelHash.hashImagen(pixeles);
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
-                if(!yaExisteArchivoHash){
-                    Toast.makeText(actividadPrincipal.this,"Creando Archivo Hashes", Toast.LENGTH_LONG).show();
-                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt","");
+                if (!yaExisteArchivoHash) {
+                    Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
+                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
                 String nombreImagen = new File(pathCargado).getName();
-                pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
-                informacion += "Imagen tomada y su hash: "+ hashImagen;
+                pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
+                informacion += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", informacion);
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
 
+                //Logica para LBP
+                compare(selectedImage, selectedImage);
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(actividadPrincipal.this, "Error", Toast.LENGTH_LONG).show();
-            } catch (IOException e){
-                e.printStackTrace();
-                Toast.makeText(actividadPrincipal.this, "Error Moviendo Foto", Toast.LENGTH_LONG).show();
             }
-        }
-        else if(requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK){
+        } else if (requestCode == TAKE_PICTURE && resultCode == Activity.RESULT_OK) {
             Uri selectedImage = imageUri;
-            getContentResolver().notifyChange(selectedImage,null);
+            getContentResolver().notifyChange(selectedImage, null);
             ImageView imageView = null;
             imageView = (ImageView) findViewById(R.id.viewPhoto);
             ContentResolver cr = getContentResolver();
             Bitmap bitmap;
-            try{
-                bitmap = MediaStore.Images.Media.getBitmap(cr,selectedImage);
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(cr, selectedImage);
                 imageView.setImageBitmap(bitmap);
                 bitmap = pixelHash.resizeImage(bitmap);
                 bitmap = pixelHash.toGrayscale(bitmap);
-                String info ="";
-                int[] pixeles = new int[bitmap.getHeight()*bitmap.getWidth()];
-                bitmap.getPixels(pixeles,0,bitmap.getWidth(),0,0,bitmap.getWidth(),bitmap.getHeight());
-                info = "Total de pixeles: "+pixeles.length+"\n";
+                String info = "";
+                int[] pixeles = new int[bitmap.getHeight() * bitmap.getWidth()];
+                bitmap.getPixels(pixeles, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+                info = "Total de pixeles: " + pixeles.length + "\n";
                 String hashImagen = pixelHash.hashImagen(pixeles);
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
-                if(!yaExisteArchivoHash){
-                    Toast.makeText(actividadPrincipal.this,"Creando Archivo Hashes", Toast.LENGTH_LONG).show();
-                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt","");
+                if (!yaExisteArchivoHash) {
+                    Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
+                    generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
                 String nombreImagen = new File(selectedImage.getPath()).getName();
-                pixelHash.escribirNuevoHash(hashImagen,nombreImagen);
-                info += "Imagen tomada y su hash: "+ hashImagen;
+                pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
+                info += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", info);
                 String hp = pixelHash.getHiperPlanos();
-                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt",hp);
-            }
-            catch (Exception e){
-                Log.e(logtag,e.toString());
+                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
+
+                //Logica para LBP
+                compare(bitmap, bitmap);
+
+            } catch (Exception e) {
+                Log.e(logtag, e.toString());
             }
         }
     }
@@ -257,9 +260,9 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             writer.append(sBody);
             writer.flush();
             writer.close();
-            Toast.makeText(actividadPrincipal.this,"Archivo guardado",Toast.LENGTH_LONG).show();
+            Toast.makeText(actividadPrincipal.this, "Archivo guardado", Toast.LENGTH_LONG).show();
         } catch (IOException e) {
-            Toast.makeText(actividadPrincipal.this,"Archivo no guardado",Toast.LENGTH_LONG).show();
+            Toast.makeText(actividadPrincipal.this, "Archivo no guardado", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
     }
@@ -294,62 +297,59 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         return true;
     }
 
-    public boolean archivoYaExiste(String fileName){
-        File root = new File(Environment.getExternalStorageDirectory(),"Notes");
+    public boolean archivoYaExiste(String fileName) {
+        File root = new File(Environment.getExternalStorageDirectory(), "Notes");
         File archivo = new File(root, fileName);
-        if(!archivo.exists())
+        if (!archivo.exists())
             return false;
         return true;
     }
 
-    void compare() {
-        try {
-            bmpimg1 = bmpimg1.copy(Bitmap.Config.ARGB_8888, true);
-            bmpimg2 = bmpimg2.copy(Bitmap.Config.ARGB_8888, true);
-            img1 = new Mat();
-            img2 = new Mat();
-            Utils.bitmapToMat(bmpimg1, img1);
-            Utils.bitmapToMat(bmpimg2, img2);
-            Imgproc.cvtColor(img1, img1, Imgproc.COLOR_BGR2RGB);
-            Imgproc.cvtColor(img2, img2, Imgproc.COLOR_BGR2RGB);
-            detector = FeatureDetector.create(FeatureDetector.PYRAMID_FAST);
-            DescExtractor = DescriptorExtractor.create(descriptor);
-            matcher = DescriptorMatcher
-                    .create(DescriptorMatcher.BRUTEFORCE_HAMMING);
-
-            keypoints = new MatOfKeyPoint();
-            dupKeypoints = new MatOfKeyPoint();
-            descriptors = new Mat();
-            dupDescriptors = new Mat();
-            matches = new MatOfDMatch();
-            detector.detect(img1, keypoints);
-            Log.d("LOG!", "number of query Keypoints= " + keypoints.size());
-            detector.detect(img2, dupKeypoints);
-            Log.d("LOG!", "number of dup Keypoints= " + dupKeypoints.size());
-            // Descript keypoints
-            DescExtractor.compute(img1, keypoints, descriptors);
-            DescExtractor.compute(img2, dupKeypoints, dupDescriptors);
-            Log.d("LOG!", "number of descriptors= " + descriptors.size());
-            Log.d("LOG!",
-                    "number of dupDescriptors= " + dupDescriptors.size());
-            // matching descriptors
-            matcher.match(descriptors, dupDescriptors, matches);
-            Log.d("LOG!", "Matches Size " + matches.size());
-            // New method of finding best matches
-            List<DMatch> matchesList = matches.toList();
-            List<DMatch> matches_final = new ArrayList<DMatch>();
-            for (int i = 0; i < matchesList.size(); i++) {
-                if (matchesList.get(i).distance <= min_dist) {
-                    matches_final.add(matches.toList().get(i));
-                }
-            }
-
-            matches_final_mat = new MatOfDMatch();
-            matches_final_mat.fromList(matches_final);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public boolean compare(Bitmap bmpimg1, Bitmap bmpimg2) {
+        bmpimg1 = Bitmap.createScaledBitmap(bmpimg1, 100, 100, true);
+        bmpimg2 = Bitmap.createScaledBitmap(bmpimg2, 100, 100, true);
+        Mat img1 = new Mat();
+        Utils.bitmapToMat(bmpimg1, img1);
+        Mat img2 = new Mat();
+        Utils.bitmapToMat(bmpimg2, img2);
+        Imgproc.cvtColor(img1, img1, Imgproc.COLOR_RGBA2GRAY);
+        Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGBA2GRAY);
+        img1.convertTo(img1, CvType.CV_32F);
+        img2.convertTo(img2, CvType.CV_32F);
+        //Log.d("ImageComparator", "img1:"+img1.rows()+"x"+img1.cols()+" img2:"+img2.rows()+"x"+img2.cols());
+        Mat hist1 = new Mat();
+        Mat hist2 = new Mat();
+        MatOfInt histSize = new MatOfInt(180);
+        MatOfInt channels = new MatOfInt(0);
+        ArrayList<Mat> bgr_planes1 = new ArrayList<Mat>();
+        ArrayList<Mat> bgr_planes2 = new ArrayList<Mat>();
+        Core.split(img1, bgr_planes1);
+        Core.split(img2, bgr_planes2);
+        MatOfFloat histRanges = new MatOfFloat(0f, 180f);
+        boolean accumulate = false;
+        Imgproc.calcHist(bgr_planes1, channels, new Mat(), hist1, histSize, histRanges, accumulate);
+        Core.normalize(hist1, hist1, 0, hist1.rows(), Core.NORM_MINMAX, -1, new Mat());
+        Imgproc.calcHist(bgr_planes2, channels, new Mat(), hist2, histSize, histRanges, accumulate);
+        Core.normalize(hist2, hist2, 0, hist2.rows(), Core.NORM_MINMAX, -1, new Mat());
+        img1.convertTo(img1, CvType.CV_32F);
+        img2.convertTo(img2, CvType.CV_32F);
+        hist1.convertTo(hist1, CvType.CV_32F);
+        hist2.convertTo(hist2, CvType.CV_32F);
+        double compare = Imgproc.compareHist(hist1, hist2, Imgproc.CV_COMP_CHISQR);
+        Log.d("ImageComparator", "compare: " + compare);
+        String x = "";
+        if (compare >= 0 && compare < 1500) {
+            Toast.makeText(actividadPrincipal.this, "Images may be possible duplicates", Toast.LENGTH_LONG).show();
+            x+="Images may be possible duplicates";
+            generateNoteOnSD(actividadPrincipal.this, "LBPPruebas.txt", x);
+            return true;
         }
-
+        else {
+            Toast.makeText(actividadPrincipal.this, "Images are not duplicates", Toast.LENGTH_LONG).show();
+            x+="Images are not duplicates";
+            generateNoteOnSD(actividadPrincipal.this, "LBPPruebas.txt", x);
+            return false;
+        }
     }
 
     // Carga de Imagen desde la galeria
@@ -412,4 +412,5 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             }
         }
     }
+
 }

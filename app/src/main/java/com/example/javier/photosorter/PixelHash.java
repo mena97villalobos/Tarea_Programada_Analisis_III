@@ -9,9 +9,10 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
-
+import java.lang.String;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,7 +73,7 @@ public class PixelHash {
         ArrayList<ArrayList<Integer>> arregloFinal = new ArrayList<>();
         Random rand = new Random();
         int contador = 0;
-        while(contador<20){
+        while(contador<10){
             ArrayList<Integer> hiperPlanoActual = new ArrayList<>();
             for(int i=0;i<65536;i++){
                 hiperPlanoActual.add(rand.nextInt(513)-256);
@@ -103,28 +104,12 @@ public class PixelHash {
         return hashFinal;
     }
 
-    public void generateNoteOnSD(Context context, String sFileName, String sBody) {
-        try {
-            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
-            if (!root.exists()) {
-                root.mkdirs();
-            }
-            File gpxfile = new File(root, sFileName);
-            FileWriter writer = new FileWriter(gpxfile);
-            writer.append(sBody);
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public String getHiperPlanos(){
         String strFinal = "";
-        for(ArrayList<Integer> hiperPlano:hiperplanos){
-            //strFinal+=hiperPlano.toString()+"\n";
+        for(ArrayList<Integer> hiperPlano : hiperplanos){
+            strFinal+="["+convertToString(hiperPlano)+"]"+"\n";
         }
-        return String.valueOf(hiperplanos.size());  //trFinal;
+        return strFinal;
     }
 
     public void setHiperplanos(){
@@ -139,10 +124,9 @@ public class PixelHash {
                 BufferedReader buffreader = new BufferedReader(inputreader);
                 String line = buffreader.readLine();
                 String[] valores;
-                ArrayList valoresEnteros;
+                ArrayList<Integer> valoresEnteros = null;
                 while(line != null){
-                    line = line.replace("[","").replace("]","");
-                    valores = line.split(",");
+                    valores = line.split(":");
                     valoresEnteros = convertirAEnteros(valores);
                     enteros.add(valoresEnteros);
                     line = buffreader.readLine();
@@ -178,6 +162,19 @@ public class PixelHash {
             valoresNuevos.add(Integer.parseInt(enteros[i]));
         }
         return valoresNuevos;
+    }
+
+    @NonNull
+    static String convertToString(ArrayList<Integer> numbers) {
+        StringBuilder builder = new StringBuilder();
+        // Append all Integers in StringBuilder to the StringBuilder.
+        for (int number : numbers) {
+            builder.append(number);
+            builder.append(":");
+        }
+        // Remove last delimiter with setLength.
+        builder.setLength(builder.length() - 1);
+        return builder.toString();
     }
 
 }
