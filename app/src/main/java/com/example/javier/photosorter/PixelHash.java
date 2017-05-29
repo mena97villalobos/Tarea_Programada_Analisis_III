@@ -32,8 +32,25 @@ import java.util.Random;
  */
 
 public class PixelHash {
+    public ArrayList<ArrayList<Integer>> hiperplanos = null;
 
-    public ArrayList<ArrayList<Integer>> hiperplanos = generarHiperplanos();
+
+    public PixelHash(){
+        boolean yaExisteArchivo = archivoYaExiste("hiperplanos.txt");
+        if (!yaExisteArchivo) {
+            hiperplanos = generarHiperplanos();
+        }
+        else
+            setHiperplanos();
+    }
+
+    public boolean archivoYaExiste(String fileName) {
+        File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+        File archivo = new File(root, fileName);
+        if (!archivo.exists())
+            return false;
+        return true;
+    }
 
     public ArrayList<Integer> vectorImagen(Bitmap imagen){
         imagen = resizeImage(imagen);

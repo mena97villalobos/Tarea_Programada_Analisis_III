@@ -239,7 +239,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", info);
                 String hp = pixelHash.getHiperPlanos();
                 generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
-
                 //Logica para LBP
                 compare(bitmap, bitmap);
 
