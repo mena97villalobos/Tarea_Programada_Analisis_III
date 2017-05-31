@@ -94,6 +94,8 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public LBPHash lbpHash = new LBPHash();
     public int RESULT_LOAD_IMG = 1;
 
+    public int[][] pixelesLBP = new int[256][256];
+
     //Variables OpenCV
     private static Bitmap bmp, yourSelectedImage;//, bmpimg1, bmpimg2;
     private static Mat descriptors, dupDescriptor;//, img1, img2,;
@@ -106,9 +108,24 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
     public double distance;
     public double min_dist = 0.775;
 
-    public void abrirActividad(View v) {
+    public void abrirPixeles(View v) {
+        Bundle b = new Bundle();
+        b.putString("Alg", "Pixeles");
+
         Intent i = new Intent(this, Actividad_Expandable.class);
+        i.putExtras(b);
         startActivity(i);
+        finish();
+    }
+
+    public void abrirLBP(View v) {
+        Bundle b = new Bundle();
+        b.putString("Alg", "LBP");
+
+        Intent i = new Intent(this, Actividad_Expandable.class);
+        i.putExtras(b);
+        startActivity(i);
+        finish();
     }
 
     public void cargarHiperPlanos(View v) {
@@ -148,6 +165,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         navigationView.setNavigationItemSelectedListener(this);
         camara.setOnClickListener(camaraListener);
         generateNoteOnSD(actividadPrincipal.this, "Debug.txt", pixelHash.loadResult);
+        generateNoteOnSD(actividadPrincipal.this, "DebugLBP.txt", lbpHash.loadResult);
     }
 
     public View.OnClickListener camaraListener = new View.OnClickListener() {
@@ -184,7 +202,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 //
                 //LBP Prueba
                 String nombreImagen = new File(pathCargado).getName();
-                String hashLBP = lbpHash.comparar(selectedImage, nombreImagen);
+                //String hashLBP = lbpHash.comparar(selectedImage, nombreImagen);
 
 
                 //Pixel Hash
@@ -202,10 +220,25 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
                 informacion += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", informacion);
-                String hp = pixelHash.getHiperPlanos();
-                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
+
+                boolean pixelExists = archivoYaExiste("hiperplanos.txt");
+                if (!pixelExists) {
+                    String hp = pixelHash.getHiperPlanos();
+                    generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
+                }
 
                 //Logica para LBP
+                pixelesLBP = lbpHash.getPixeles(selectedImage);
+                ArrayList<Integer> vectorLBP = lbpHash.generarHistogramaLBP(pixelesLBP);
+                String hashLBP = lbpHash.hashImagen(vectorLBP);
+                lbpHash.escribirNuevoHash(hashLBP, nombreImagen);
+
+                boolean lbpExists = archivoYaExiste("lbpHiperplanos.txt");
+                if (!lbpExists) {
+                    String hp2 = lbpHash.getHiperPlanos();
+                    generateNoteOnSD(actividadPrincipal.this, "lbpHiperplanos.txt", hp2);
+                }
+
 
 
             } catch (FileNotFoundException e) {
@@ -224,7 +257,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 bitmap = MediaStore.Images.Media.getBitmap(cr, selectedImage);
                 imageView.setImageBitmap(bitmap);
 
-                String hashLBP = lbpHash.comparar(bitmap, nombreImagen);
+                //String hashLBP = lbpHash.comparar(bitmap, nombreImagen);
 
                 bitmap = pixelHash.resizeImage(bitmap);
                 bitmap = pixelHash.toGrayscale(bitmap);
@@ -241,9 +274,26 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
                 info += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", info);
-                String hp = pixelHash.getHiperPlanos();
-                generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
+
+                boolean pixelExists = archivoYaExiste("hiperplanos.txt");
+                if (!pixelExists) {
+                    String hp = pixelHash.getHiperPlanos();
+                    generateNoteOnSD(actividadPrincipal.this, "hiperplanos.txt", hp);
+                }
+
                 //Logica para LBP
+                pixelesLBP = lbpHash.getPixeles(bitmap); //Si falla, revisar esto...
+                ArrayList<Integer> vectorLBP = lbpHash.generarHistogramaLBP(pixelesLBP);
+                String hashLBP = lbpHash.hashImagen(vectorLBP);
+                lbpHash.escribirNuevoHash(hashLBP, nombreImagen);
+
+                boolean lbpExists = archivoYaExiste("lbpHiperplanos.txt");
+                if (!lbpExists) {
+                    String hp2 = lbpHash.getHiperPlanos();
+                    generateNoteOnSD(actividadPrincipal.this, "lbpHiperplanos.txt", hp2);
+                }
+
+
 
             } catch (Exception e) {
                 Log.e(logtag, e.toString());

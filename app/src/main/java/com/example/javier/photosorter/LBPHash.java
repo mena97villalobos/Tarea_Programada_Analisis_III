@@ -22,7 +22,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Anthony on 26/5/17.
@@ -31,6 +33,75 @@ import java.util.ArrayList;
 public class LBPHash {
 
     public ArrayList<ArrayList<Integer>> valoresHeadersArchivo;
+    public ArrayList<ArrayList<Integer>> hiperplanos;
+    public String loadResult = "";
+
+    public LBPHash() {
+        boolean yaExisteArchivo = archivoYaExiste("lbpHiperplanos.txt");
+        if (!yaExisteArchivo) {
+            hiperplanos = generarHiperplanos();
+            loadResult = "Generar Hiperplanos";
+        } else {
+            setHiperplanos();
+            loadResult = "Cargar Hiperplanos";
+        }
+    }
+
+    public String hashImagen(ArrayList<Integer> pixeles) {
+        String hashFinal = "";
+        long suma = 0;//, mediaHP = 0, mediaImg = 0;
+        for (int j = 0; j < hiperplanos.size(); j++) {
+            for (int w = 0; w < hiperplanos.get(j).size(); w++) {
+                suma += hiperplanos.get(j).get(w) * pixeles.get(w);
+            }
+            if (suma > 0)
+                hashFinal += "1";
+            else
+                hashFinal += "0";
+            suma = 0;
+        }
+
+        return hashFinal;
+    }
+
+
+    public void setHiperplanos() {
+        try {
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            File archivo = new File(root, "lbpHiperplanos.txt");
+            InputStream instream = new FileInputStream(archivo);
+            ArrayList<ArrayList<Integer>> enteros = new ArrayList<>();
+            if (instream != null) {
+                // prepare the file for reading
+                InputStreamReader inputreader = new InputStreamReader(instream);
+                BufferedReader buffreader = new BufferedReader(inputreader);
+                String line = buffreader.readLine();
+                String[] valores;
+                ArrayList<Integer> valoresEnteros = null;
+                while (line != null) {
+                    line = line.replace("[", "").replace("]", "");
+                    valores = line.split(":");
+                    valoresEnteros = convertirAEnteros(valores);
+                    enteros.add(valoresEnteros);
+                    line = buffreader.readLine();
+                }
+            }
+            hiperplanos = enteros;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            // close the file.
+        }
+    }
+
+
+    public ArrayList<Integer> convertirAEnteros(String[] enteros) {
+        ArrayList<Integer> valoresNuevos = new ArrayList<>();
+        for (int i = 0; i < enteros.length; i++) {
+            valoresNuevos.add(Integer.parseInt(enteros[i]));
+        }
+        return valoresNuevos;
+    }
 
     public String comparar(Bitmap bmp, String bmpName){
         int[] arrayAux = new int[bmp.getWidth()*bmp.getHeight()];
@@ -154,6 +225,43 @@ public class LBPHash {
             return false;
     }
     */
+
+    public int[][] getPixeles(Bitmap imagen) {
+        int[][] matrizPixeles = new int[256][256];
+
+        for (int i = 0; i < 256; i++) {
+            for (int j = 0; j < 256; j++) {
+                matrizPixeles[i][j] = Math.abs(imagen.getPixel(i, j)) % 256;
+            }
+        }
+        return matrizPixeles;
+    }
+
+
+    public ArrayList<ArrayList<Integer>> generarHiperplanos() {
+        ArrayList<ArrayList<Integer>> arregloFinal = new ArrayList<>();
+        Random rand = new Random();
+        int contador = 0;
+        while (contador < 10) { //TODO MODIFICAR ESTO TAMBIEN
+            ArrayList<Integer> hiperPlanoActual = new ArrayList<>();
+            for (int i = 0; i < 256; i++) {
+                hiperPlanoActual.add(rand.nextInt(513) - 256);
+            }
+            contador++;
+            arregloFinal.add(hiperPlanoActual);
+        }
+        return arregloFinal;
+    }
+
+    public String getHiperPlanos() {
+        String strFinal = "";
+        for (ArrayList<Integer> hiperPlano : hiperplanos) {
+            strFinal += "[" + convertToString(hiperPlano) + "]" + "\n";
+        }
+        return strFinal;
+    }
+
+
     public ArrayList<Integer> generarHistogramaLBP(int[][] pixels){
         int [][] pixeles  = pixels;
         ArrayList<Integer> histograma = new ArrayList<>();

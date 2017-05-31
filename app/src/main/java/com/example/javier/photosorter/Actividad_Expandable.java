@@ -34,9 +34,16 @@ public class Actividad_Expandable extends AppCompatActivity {
 
     private CustomAdapter listAdapter;
     private ExpandableListView simpleExpandableListView;
-    private Map<String,ArrayList<String>> mapaPixeles = new HashMap();
-    private Map<String,String> mapaTags = new HashMap();
 
+    //TODO PIXELES
+    private Map<String,ArrayList<String>> mapaPixeles = new HashMap();
+    private Map<String, String> mapaTagsPixeles = new HashMap();
+
+    //TODO LBP
+    private Map<String, ArrayList<String>> mapaLBP = new HashMap();
+    private Map<String, String> mapaTagsLBP = new HashMap();
+
+    private String algoritmo = "";
 
     public void cargarImagen(View v){
         Intent i = new Intent(this,ViewImage.class);
@@ -49,11 +56,24 @@ public class Actividad_Expandable extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_actividad__expandable);
 
+        Bundle b2 = getIntent().getExtras();
+        if (b2 != null) {
+            algoritmo = b2.getString("Alg");
+        }
+
         //simpleExpandableListView.addChildrenForAccessibility(new ArrayList<View>(1));
 
         // add data for displaying in expandable list view
         //loadData();
-        cargarHashes();
+
+        //TODO Hacerle un if para cargarHashes de Pixeles o de LBP
+
+        if (algoritmo.equals("Pixeles"))
+            cargarHashes();
+        else
+            cargarHashesLBP();
+
+        Toast.makeText(this, algoritmo, Toast.LENGTH_SHORT).show();
 
         //get reference of the ExpandableListView
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.simpleExpandableListView);
@@ -109,6 +129,7 @@ public class Actividad_Expandable extends AppCompatActivity {
 
                 //Toast.makeText(getBaseContext(), "Item Pos: "+simpleExpandableListView., Toast.LENGTH_SHORT).show();
 
+
                 if(position>=0 && position<deptList.size()) {
                     final GroupInfo headerInfo = deptList.get(position);
 
@@ -140,8 +161,13 @@ public class Actividad_Expandable extends AppCompatActivity {
                                             // edit text
                                             // EditText cuadroEditar = (EditText)findViewById(R.id.editTextDialogUserInput);
                                             //cuadroEditar.setText(userInput.getText());
-                                            escribirNuevoTag(headerInfo.getName(),userInput.getText().toString());
-                                            headerInfo.setName(userInput.getText().toString());
+                                            if (algoritmo.equals("Pixeles")) {
+                                                escribirNuevoTag(headerInfo.getName(), userInput.getText().toString());
+                                                headerInfo.setName(userInput.getText().toString());
+                                            } else {
+                                                escribirNuevoTagLBP(headerInfo.getName(), userInput.getText().toString());
+                                                headerInfo.setName(userInput.getText().toString());
+                                            }
                                         }
                                     })
                             .setNegativeButton("Cancel",
@@ -200,8 +226,6 @@ public class Actividad_Expandable extends AppCompatActivity {
 
     }
 
-
-
     //here we maintain our products in various departments
     private int addProduct(String department, String product){
 
@@ -234,6 +258,58 @@ public class Actividad_Expandable extends AppCompatActivity {
         //find the group position inside the list
         groupPosition = deptList.indexOf(headerInfo);
         return groupPosition;
+    }
+
+    public void cargarHashesLBP() {
+        try {
+
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            File archivo = new File(root, "LBPDiccionary.txt");
+
+
+            InputStream instream = new FileInputStream(archivo);
+
+            if (instream != null) {
+                // prepare the file for reading
+                InputStreamReader inputreader = new InputStreamReader(instream);
+                BufferedReader buffreader = new BufferedReader(inputreader);
+
+                String line = buffreader.readLine();
+
+                ArrayList valoresEnteros;
+                while (line != null) {
+
+                    ArrayList<String> temp;
+
+                    if (mapaLBP.get(line.split(",")[0]) != null)
+                        temp = mapaLBP.get(line.split(",")[0]);
+                    else
+                        temp = new ArrayList();
+
+                    temp.add(line.split(",")[1]);
+                    mapaLBP.put(line.split(",")[0], temp);
+
+
+                    //addProduct(,"imagenxDxdXDxd"); // en lugar de imagen xdxdx hay que agregar el nombre de la imagen
+                    line = buffreader.readLine();
+                }
+
+                cargarTagsLBP();
+
+                for (String key : mapaLBP.keySet()) {
+                    for (String valor : mapaLBP.get(key)) {
+                        if (mapaTagsLBP.get(key) == null)
+                            addProduct(key, valor);
+                        else
+                            addProduct(mapaTagsLBP.get(key), valor);
+                    }
+                }
+            }
+
+
+        } catch (Exception ex) {
+            // print stack trace.
+        }
     }
 
     public void cargarHashes(){
@@ -275,18 +351,47 @@ public class Actividad_Expandable extends AppCompatActivity {
 
                 for(String key: mapaPixeles.keySet()){
                     for(String valor: mapaPixeles.get(key)){
-                        if(mapaTags.get(key) == null)
+                        if (mapaTagsPixeles.get(key) == null)
                             addProduct(key,valor);
                         else
-                            addProduct(mapaTags.get(key),valor);
+                            addProduct(mapaTagsPixeles.get(key), valor);
                     }
                 }
             }
 
 
-
         } catch (Exception ex) {
             // print stack trace.
+
+        }
+    }
+
+    public void cargarTagsLBP() {
+        try {
+
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            File archivo = new File(root, "tags_hashes_LBP.txt");
+
+            InputStream instream = new FileInputStream(archivo);
+
+            if (instream != null) {
+                // prepare the file for reading
+                InputStreamReader inputreader = new InputStreamReader(instream);
+                BufferedReader buffreader = new BufferedReader(inputreader);
+
+                String line = buffreader.readLine();
+
+                while (line != null) {
+
+                    mapaTagsLBP.put(line.split(",")[0], line.split(",")[1]);
+                    line = buffreader.readLine();
+                }
+            }
+        } catch (Exception ex) {
+            // print stack trace.
+
+        } finally {
+            // close the file.
 
         }
     }
@@ -308,7 +413,7 @@ public class Actividad_Expandable extends AppCompatActivity {
 
                 while(line != null){
 
-                    mapaTags.put(line.split(",")[0],line.split(",")[1]);
+                    mapaTagsPixeles.put(line.split(",")[0], line.split(",")[1]);
                     line = buffreader.readLine();
                 }
             }
@@ -337,6 +442,20 @@ public class Actividad_Expandable extends AppCompatActivity {
         }
     }
 
-
+    public void escribirNuevoTagLBP(String hash, String tag) {
+        try {
+            File root = new File(Environment.getExternalStorageDirectory(), "Notes");
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, "tags_hashes_LBP.txt");
+            FileWriter writer = new FileWriter(gpxfile, true);
+            writer.append(hash + "," + tag + "\n");
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
