@@ -39,14 +39,12 @@ public class PixelHash {
         boolean yaExisteArchivo = archivoYaExiste("hiperplanos.txt");
         if (!yaExisteArchivo) {
             hiperplanos = generarHiperplanos();
-            Log.i("Cargar hiperplanos", "No sirve");
             loadResult = "Generar Hiperplanos";
         } else {
             setHiperplanos();
             loadResult = "Cargar Hiperplanos";
         }
     }
-
 
     public boolean archivoYaExiste(String fileName) {
         File root = new File(Environment.getExternalStorageDirectory(), "Notes");

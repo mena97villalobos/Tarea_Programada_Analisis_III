@@ -176,14 +176,18 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 image_view.setImageBitmap(selectedImage);
-                //TODO De aqui pa'lla se puede cagar PD le quite el final a las variables de arriba
+                //TODO De aqui pa'lla se puede joder PD le quite el final a las variables de arriba
                 String pathCargado = getRealPathFromURI(imageUri);
-
                 //Copiar la imagen al directorio Pictures
                 String pathDest = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
                 copyFileOrDirectory(pathCargado, pathDest);
                 //
+                //LBP Prueba
+                String nombreImagen = new File(pathCargado).getName();
+                String hashLBP = lbpHash.comparar(selectedImage, nombreImagen);
 
+
+                //Pixel Hash
                 selectedImage = pixelHash.resizeImage(selectedImage);
                 selectedImage = pixelHash.toGrayscale(selectedImage);
                 String informacion = "";
@@ -193,10 +197,8 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                 String hashImagen = pixelHash.hashImagen(pixeles);
                 boolean yaExisteArchivoHash = archivoYaExiste("hashes.txt");
                 if (!yaExisteArchivoHash) {
-                    //Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
                     generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
-                String nombreImagen = new File(pathCargado).getName();
                 pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
                 informacion += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", informacion);
@@ -217,9 +219,13 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
             imageView = (ImageView) findViewById(R.id.viewPhoto);
             ContentResolver cr = getContentResolver();
             Bitmap bitmap;
+            String nombreImagen = new File(selectedImage.getPath()).getName();
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(cr, selectedImage);
                 imageView.setImageBitmap(bitmap);
+
+                String hashLBP = lbpHash.comparar(bitmap, nombreImagen);
+
                 bitmap = pixelHash.resizeImage(bitmap);
                 bitmap = pixelHash.toGrayscale(bitmap);
                 String info = "";
@@ -232,7 +238,6 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
                     //Toast.makeText(actividadPrincipal.this, "Creando Archivo Hashes", Toast.LENGTH_LONG).show();
                     generateNoteOnSD(actividadPrincipal.this, "hashes.txt", "");
                 }
-                String nombreImagen = new File(selectedImage.getPath()).getName();
                 pixelHash.escribirNuevoHash(hashImagen, nombreImagen);
                 info += "Imagen tomada y su hash: " + hashImagen;
                 generateNoteOnSD(actividadPrincipal.this, "info.txt", info);
