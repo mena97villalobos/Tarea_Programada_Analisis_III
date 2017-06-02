@@ -12,6 +12,9 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
+
+import org.opencv.core.Mat;
+
 import java.lang.String;
 import java.io.BufferedReader;
 import java.io.File;
@@ -92,7 +95,7 @@ public class PixelHash {
         ArrayList<ArrayList<Integer>> arregloFinal = new ArrayList<>();
         Random rand = new Random();
         int contador = 0;
-        while(contador<10){
+        while (contador < 30) {
             ArrayList<Integer> hiperPlanoActual = new ArrayList<>();
             for(int i=0;i<65536;i++){
                 hiperPlanoActual.add(rand.nextInt(513)-256);
@@ -158,6 +161,14 @@ public class PixelHash {
         } finally {
             // close the file.
         }
+    }
+
+    public int[] valoresTuanis(int[] pixelesmalos) {
+        int[] valoresNuevos = new int[pixelesmalos.length];
+        for (int i = 0; i < pixelesmalos.length; i++) {
+            valoresNuevos[i] = Math.abs(pixelesmalos[i]) % 256;
+        }
+        return valoresNuevos;
     }
 
     public void escribirNuevoHash(String hashNuevo,String name){

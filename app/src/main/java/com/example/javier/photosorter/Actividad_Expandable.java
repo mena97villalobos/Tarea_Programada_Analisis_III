@@ -2,6 +2,8 @@ package com.example.javier.photosorter;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -34,6 +36,10 @@ public class Actividad_Expandable extends AppCompatActivity {
 
     private CustomAdapter listAdapter;
     private ExpandableListView simpleExpandableListView;
+
+    private PixelHash objPixelHash = new PixelHash();
+
+    private Compare comparador = new Compare();
 
     //TODO PIXELES
     private Map<String,ArrayList<String>> mapaPixeles = new HashMap();
@@ -112,6 +118,27 @@ public class Actividad_Expandable extends AppCompatActivity {
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
                 //get the group header
                 GroupInfo headerInfo = deptList.get(groupPosition);
+                String nombreImagen = "";
+                File root = new File(Environment.getExternalStorageDirectory(), "Pictures");
+                ArrayList<int[]> arreglosDelBucket = new ArrayList<int[]>();
+                for (int i = 0; i < headerInfo.getProductList().size(); i++) {
+                    nombreImagen = headerInfo.getProductList().get(i).getName();
+                    File imagenEncontrada = new File(root, nombreImagen);
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    Bitmap bitmapCreado = BitmapFactory.decodeFile(imagenEncontrada.getAbsolutePath(), bmOptions);
+                    bitmapCreado = objPixelHash.resizeImage(bitmapCreado);
+                    bitmapCreado = objPixelHash.toGrayscale(bitmapCreado);
+
+                    int[] pixeles = new int[bitmapCreado.getHeight() * bitmapCreado.getWidth()];
+
+                    bitmapCreado.getPixels(pixeles, 0, bitmapCreado.getWidth(), 0, 0, bitmapCreado.getWidth(), bitmapCreado.getHeight());
+                    arreglosDelBucket.add(objPixelHash.valoresTuanis(pixeles));
+                }
+
+                double promedioDevuelto = comparador.getAvgDistance(arreglosDelBucket);
+
+                Toast.makeText(Actividad_Expandable.this, "Promedio Devuelto: " + promedioDevuelto, Toast.LENGTH_LONG).show();
+
                 //display it or do something with it
                 //Toast.makeText(getBaseContext(), " Header is :: " + headerInfo.getName(),
                   //      Toast.LENGTH_LONG).show();

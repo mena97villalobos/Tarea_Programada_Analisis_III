@@ -166,6 +166,7 @@ public class actividadPrincipal extends AppCompatActivity implements NavigationV
         camara.setOnClickListener(camaraListener);
         generateNoteOnSD(actividadPrincipal.this, "Debug.txt", pixelHash.loadResult);
         generateNoteOnSD(actividadPrincipal.this, "DebugLBP.txt", lbpHash.loadResult);
+
     }
 
     public View.OnClickListener camaraListener = new View.OnClickListener() {

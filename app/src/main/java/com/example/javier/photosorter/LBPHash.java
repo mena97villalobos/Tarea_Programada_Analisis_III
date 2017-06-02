@@ -242,7 +242,7 @@ public class LBPHash {
         ArrayList<ArrayList<Integer>> arregloFinal = new ArrayList<>();
         Random rand = new Random();
         int contador = 0;
-        while (contador < 10) { //TODO MODIFICAR ESTO TAMBIEN
+        while (contador < 30) { //TODO MODIFICAR ESTO TAMBIEN
             ArrayList<Integer> hiperPlanoActual = new ArrayList<>();
             for (int i = 0; i < 256; i++) {
                 hiperPlanoActual.add(rand.nextInt(513) - 256);
